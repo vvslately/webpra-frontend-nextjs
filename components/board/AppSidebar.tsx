@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, MessageSquare, FileText, User, Heart, MessagesSquare, Settings, Wallet, Crown } from "lucide-react"
+import { Home, MessageSquare, FileText, Heart, MessagesSquare, Settings } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import {
   Sidebar,
@@ -36,21 +36,6 @@ const menuItems = [
     title: "ข้อความ",
     url: "/messages",
     icon: MessagesSquare,
-  },
-  {
-    title: "โปรไฟล์",
-    url: "/profile",
-    icon: User,
-  },
-  {
-    title: "เติมเงิน",
-    url: "/topup",
-    icon: Wallet,
-  },
-  {
-    title: "สมาชิก",
-    url: "/subscription",
-    icon: Crown,
   },
 ]
 
