@@ -8,6 +8,16 @@ const nextConfig: NextConfig = {
         hostname: "files.cdn-files-a.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "pic.in.th",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
+        hostname: "pic.in.th",
+        pathname: "/**",
+      },
     ],
   },
 };

@@ -26,6 +26,33 @@ export default function ProductForm({ product, mode }: Props) {
   const [delivery_method, setDeliveryMethod] = useState(product?.delivery_method ?? "");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
+  async function handleUploadImage() {
+    if (!uploadFile) return;
+    setUploadError("");
+    setUploadLoading(true);
+    try {
+      const form = new FormData();
+      form.append("source", uploadFile);
+      const res = await fetch("/api/upload-image", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok) {
+        setUploadError(data.error || "อัพโหลดล้มเหลว");
+        return;
+      }
+      if (data.url) {
+        setImage(data.url);
+        setUploadFile(null);
+      }
+    } catch {
+      setUploadError("เกิดข้อผิดพลาด กรุณาลองใหม่");
+    } finally {
+      setUploadLoading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -95,7 +122,7 @@ export default function ProductForm({ product, mode }: Props) {
       </div>
       <div>
         <label htmlFor="image" className="block text-sm font-medium text-[#333] mb-1">
-          URL รูปภาพ
+          รูปภาพ (ใส่ URL หรืออัพโหลดรูป)
         </label>
         <input
           id="image"
@@ -105,6 +132,45 @@ export default function ProductForm({ product, mode }: Props) {
           className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b5b7a] focus:border-transparent"
           placeholder="https://..."
         />
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            id="image-upload"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              setUploadFile(f ?? null);
+              setUploadError("");
+            }}
+          />
+          <label
+            htmlFor="image-upload"
+            className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-[#333] text-sm font-medium cursor-pointer hover:bg-gray-50"
+          >
+            เลือกไฟล์
+          </label>
+          {uploadFile && (
+            <>
+              <span className="text-sm text-[#666] truncate max-w-[180px]">
+                {uploadFile.name}
+              </span>
+              <button
+                type="button"
+                onClick={handleUploadImage}
+                disabled={uploadLoading}
+                className="px-4 py-2 rounded-lg bg-[#6b5b7a] text-white text-sm font-medium hover:bg-[#5a4b6a] disabled:opacity-60"
+              >
+                {uploadLoading ? "กำลังอัพโหลด..." : "อัพโหลดรูป"}
+              </button>
+            </>
+          )}
+        </div>
+        {uploadError && (
+          <p className="mt-1 text-sm text-red-600" role="alert">
+            {uploadError}
+          </p>
+        )}
       </div>
       <div>
         <label htmlFor="price" className="block text-sm font-medium text-[#333] mb-1">
