@@ -1,28 +1,19 @@
-export interface Post {
-  id: string;
-  title: string;
-  content: string;
-  author: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
-  category: Category;
-  createdAt: string;
-  updatedAt: string;
-  views: number;
-  replies: number;
-  isPinned?: boolean;
-  isLocked?: boolean;
-  tags?: string[];
-}
-
-export interface Category {
-  id: string;
+export interface Product {
+  id: number;
   name: string;
-  description?: string;
-  color?: string;
-  icon?: string;
-  postCount?: number;
+  subtitle: string | null;
+  image: string | null;
+  price: string;
+  delivery_method: string | null;
+  created_at: Date | string | null;
+  updated_at: Date | string | null;
 }
 
+export interface Review {
+  id: number;
+  author_name: string;
+  content: string;
+  rating: number | null;
+  product_id: number | null;
+  created_at: Date | string | null;
+}

@@ -1,280 +1,195 @@
-"use client";
+import Image from "next/image";
+import Link from "next/link";
+import ContactForm from "./components/ContactForm";
+import ImageCarousel from "./components/ImageCarousel";
+import { FadeUpWhenVisible } from "./components/FadeUpWhenVisible";
+import { query } from "@/lib/db";
+import type { Product } from "@/lib/types";
 
-import { useState, useEffect } from "react";
-import Header from "@/components/board/Header";
-import SearchBar from "@/components/board/SearchBar";
-import PostCard from "@/components/board/PostCard";
-import CreatePostButton from "@/components/board/CreatePostButton";
-import { AppSidebar } from "@/components/board/AppSidebar";
-import { SidebarInset } from "@/components/ui/sidebar";
-import { FadeUp } from "@/components/animations/FadeUp";
-import { apiClient, Post as ApiPost } from "@/lib/api";
-import { Button } from "@/components/ui/button";
+const HERO_IMAGE_URL =
+  "https://files.cdn-files-a.com/uploads/11631557/2000_697b27b2be189.jpg";
 
-// Helper function to convert API Post to UI Post format
-function convertApiPostToUIPost(apiPost: ApiPost): any {
-  return {
-    id: apiPost.id.toString(),
-    title: apiPost.title,
-    content: apiPost.description,
-    author: {
-      id: apiPost.user_id.toString(),
-      name: apiPost.display_name || apiPost.username || "ไม่ระบุชื่อ",
-      avatar: apiPost.user_avatar,
-    },
-    createdAt: apiPost.created_at,
-    updatedAt: apiPost.updated_at,
-    views: apiPost.view_count || 0,
-    replies: 0, // Not available in API yet
-    isPinned: false, // Not available in API yet
-    isLocked: false, // Not available in API yet
-    tags: apiPost.tags?.map((tag) => tag.name) || [],
-    price: apiPost.price,
-    contact_info: apiPost.contact_info,
-    status: apiPost.status,
-    images: apiPost.images || [],
-  };
+const ABOUT_IMAGE_URL =
+  "https://files.cdn-files-a.com/admin/system_photos_stock/2000_695b11503992e.jpg";
+
+const BANNER_IMAGE_URL =
+  "https://files.cdn-files-a.com/admin/system_photos_stock/2000_696430659d148.jpg";
+
+const PLACEHOLDER_IMAGE =
+  "https://files.cdn-files-a.com/admin/system_photos_stock/2000_696430659d148.jpg";
+
+async function getProducts(): Promise<Product[]> {
+  try {
+    const rows = await query<Product[]>(
+      "SELECT id, name, subtitle, image, price, delivery_method, created_at, updated_at FROM products ORDER BY created_at DESC LIMIT 12"
+    );
+    return Array.isArray(rows) ? rows : [];
+  } catch {
+    return [];
+  }
 }
 
-export default function Home() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [posts, setPosts] = useState<ApiPost[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 20,
-    total: 0,
-    totalPages: 0,
-  });
-  const [sortBy, setSortBy] = useState<"created_at" | "updated_at" | "view_count" | "price">("created_at");
-  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
-
-  // Fetch posts from API
-  useEffect(() => {
-    const fetchPosts = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await apiClient.getPosts({
-          status: "active", // Only show active posts
-          search: searchQuery || undefined,
-          page: pagination.page,
-          limit: pagination.limit,
-          sort: sortBy,
-          order: sortOrder,
-        });
-
-        if (response.status === "success" && response.data) {
-          setPosts(response.data.posts);
-          setPagination(response.data.pagination);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการโหลดโพสต์");
-        console.error("Error fetching posts:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPosts();
-  }, [searchQuery, pagination.page, sortBy, sortOrder]);
-
-  // Convert API posts to UI format
-  const uiPosts = posts.map(convertApiPostToUIPost);
-
-  // Sort: pinned first, then by date (already sorted by API, but we can re-sort if needed)
-  const sortedPosts = [...uiPosts].sort((a, b) => {
-    if (a.isPinned && !b.isPinned) return -1;
-    if (!a.isPinned && b.isPinned) return 1;
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
-
+export default async function Home() {
+  const products = await getProducts();
   return (
-    <div className="min-h-screen bg-background flex w-full">
-      <AppSidebar />
-      <SidebarInset className="flex flex-col w-full">
-        <Header />
-        
-        <main className="flex-1 p-6">
-          <FadeUp>
-            {/* Hero Section */}
-            <div className="mb-8 space-y-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h2 className="text-3xl font-bold tracking-tight">โพสต์ทั้งหมด</h2>
-                <p className="text-muted-foreground mt-1">
-                  {isLoading
-                    ? "กำลังโหลด..."
-                    : `พบ ${pagination.total} โพสต์${pagination.totalPages > 1 ? ` (หน้า ${pagination.page} จาก ${pagination.totalPages})` : ""}`}
-                </p>
-              </div>
-              <CreatePostButton />
-            </div>
+    <>
+      <main className="min-h-[calc(100vh-3.5rem)] flex flex-col md:flex-row">
+        {/* Left panel - Light purple, text */}
+        <section className="flex-1 flex flex-col items-center justify-center bg-[#e8e0f0] px-8 py-12 md:py-16 md:min-w-[33%]">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[#2d1b4e] tracking-wide uppercase text-center">
+            MLT SHOP
+          </h1>
+          <div className="w-16 md:w-20 h-0.5 bg-[#6b5b7a] my-4 md:my-5" />
+          <p className="text-lg md:text-xl text-[#2d1b4e]/90 text-center font-medium leading-relaxed">
+            น้ำหอมสำหรับทุกโอกาส
+          </p>
+          <p className="text-lg md:text-xl text-[#2d1b4e]/90 text-center font-medium leading-relaxed mt-1">
+            ราคาที่คุณจับต้องได้
+          </p>
+        </section>
 
-          {/* Search Bar */}
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <SearchBar 
-              value={searchQuery} 
-              onChange={(value) => {
-                setSearchQuery(value);
-                setPagination({ ...pagination, page: 1 }); // Reset to page 1 on search
-              }} 
+        {/* Right panel - Light pink, image */}
+        <section className="flex-[2] min-h-[50vh] md:min-h-[calc(100vh-3.5rem)] relative bg-[#fce4ec] overflow-hidden">
+          <Image
+            src={HERO_IMAGE_URL}
+            alt="น้ำหอมหลากหลายแบรนด์"
+            fill
+            className="object-cover object-center"
+            sizes="(max-width: 768px) 100vw, 66vw"
+            priority
+          />
+        </section>
+      </main>
+
+      {/* About Us section */}
+      <FadeUpWhenVisible>
+        <section className="bg-[#f0f0f0] py-12 md:py-16 px-6 md:px-12">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-8 md:gap-12 items-center">
+          {/* Left - Image with border radius */}
+          <div className="w-full md:flex-1 relative aspect-[4/5] md:aspect-square max-w-md mx-auto md:mx-0 overflow-hidden rounded-2xl shadow-md">
+            <Image
+              src={ABOUT_IMAGE_URL}
+              alt="เกี่ยวกับ MLT SHOP"
+              fill
+              className="object-cover object-center"
+              sizes="(max-width: 768px) 100vw, 50vw"
             />
-            <div className="flex items-center gap-4">
-              <select 
-                className="rounded-lg border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                value={`${sortBy}-${sortOrder}`}
-                onChange={(e) => {
-                  const [sort, order] = e.target.value.split("-");
-                  setSortBy(sort as typeof sortBy);
-                  setSortOrder(order as typeof sortOrder);
-                }}
-              >
-                <option value="created_at-DESC">ล่าสุด</option>
-                <option value="view_count-DESC">ยอดนิยม</option>
-                <option value="updated_at-DESC">อัปเดตล่าสุด</option>
-                <option value="price-ASC">ราคาต่ำ-สูง</option>
-                <option value="price-DESC">ราคาสูง-ต่ำ</option>
-              </select>
+          </div>
+
+          {/* Right - Text content */}
+          <div className="w-full md:flex-1 flex flex-col justify-center">
+            <h2 className="text-2xl md:text-3xl font-bold text-[#2d1b4e]">
+              เกี่ยวกับเรา
+            </h2>
+            <div className="w-12 h-0.5 bg-[#6b5b7a] my-3" />
+            <div className="space-y-4 text-[#333] leading-relaxed">
+              <p>
+                ร้านขายน้ำหอมออนไลน์ของเรามีจุดประสงค์เพื่อนำเสนอน้ำหอมคุณภาพ
+                ราคาเข้าถึงได้ เหมาะกับบุคลิกและโอกาสที่หลากหลาย
+              </p>
+              <p>
+                เราคำนึงถึงความสะดวกในการช้อปออนไลน์
+                คัดสรรกลิ่นที่หลากหลายทั้งกลิ่นหวาน สดชื่น หรูหรา และสุภาพ
+                พร้อมข้อมูลสินค้าที่ชัดเจนเพื่อช่วยให้คุณตัดสินใจได้ง่ายขึ้น
+              </p>
             </div>
           </div>
         </div>
+        </section>
+      </FadeUpWhenVisible>
 
-        {/* Posts Grid */}
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="rounded-full bg-muted p-4 mb-4">
-              <svg
-                className="h-8 w-8 text-muted-foreground animate-spin"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">กำลังโหลดโพสต์...</h3>
-          </div>
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="rounded-full bg-destructive/15 p-4 mb-4">
-              <svg
-                className="h-8 w-8 text-destructive"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">เกิดข้อผิดพลาด</h3>
-            <p className="text-muted-foreground max-w-sm mb-4">{error}</p>
-            <Button
-              onClick={() => {
-                setError(null);
-                setIsLoading(true);
-                window.location.reload();
-              }}
-            >
-              ลองอีกครั้ง
-            </Button>
-          </div>
-        ) : sortedPosts.length > 0 ? (
-          <div className="space-y-8 md:space-y-10">
-            {sortedPosts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="rounded-full bg-muted p-4 mb-4">
-              <svg
-                className="h-8 w-8 text-muted-foreground"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">ไม่พบโพสต์</h3>
-            <p className="text-muted-foreground max-w-sm">
-              {searchQuery
-                ? "ลองค้นหาด้วยคำอื่น หรือล้างตัวกรอง"
-                : "ยังไม่มีโพสต์ในระบบ"}
+      {/* Banner: สัมผัสน้ำหอมใหม่ */}
+      <FadeUpWhenVisible>
+        <section className="relative w-full min-h-[50vh] md:min-h-[60vh] overflow-hidden">
+        <Image
+          src={BANNER_IMAGE_URL}
+          alt="สัมผัสน้ำหอมใหม่ - แรงบันดาลใจในทุกสัมผัส"
+          fill
+          className="object-cover object-center"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 flex items-center justify-end pr-6 md:pr-12 lg:pr-20">
+          <div className="bg-white/90 backdrop-blur-sm px-6 py-5 md:px-8 md:py-6 rounded-lg shadow-lg max-w-sm text-right">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#2d1b4e]">
+              สัมผัสน้ำหอมใหม่
+            </h2>
+            <div className="w-12 h-0.5 bg-[#6b5b7a] my-3 ml-auto" />
+            <p className="text-base md:text-lg text-[#333] font-medium">
+              แรงบันดาลใจในทุกสัมผัส
             </p>
           </div>
-        )}
+        </div>
+        </section>
+      </FadeUpWhenVisible>
 
-        {/* Pagination */}
-        {!isLoading && !error && pagination.totalPages > 1 && (
-          <div className="mt-8 flex items-center justify-center gap-6">
-            <button
-              disabled={pagination.page === 1}
-              onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
-              className="rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 hover:bg-muted transition-colors"
-            >
-              ก่อนหน้า
-            </button>
-            {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-              let pageNum;
-              if (pagination.totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (pagination.page <= 3) {
-                pageNum = i + 1;
-              } else if (pagination.page >= pagination.totalPages - 2) {
-                pageNum = pagination.totalPages - 4 + i;
-              } else {
-                pageNum = pagination.page - 2 + i;
-              }
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setPagination({ ...pagination, page: pageNum })}
-                  className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
-                    pagination.page === pageNum
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-input bg-background hover:bg-muted"
-                  }`}
+      {/* รีวิว section - carousel รูป */}
+      <FadeUpWhenVisible>
+        <ImageCarousel />
+      </FadeUpWhenVisible>
+
+      {/* สินค้า section - ดึงจาก DB */}
+      <FadeUpWhenVisible>
+        <section className="bg-[#e8e0f0] py-12 md:py-16 px-6 md:px-12">
+          <div className="max-w-6xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-[#2d1b4e] text-center">
+            มาใหม่
+          </h2>
+          <div className="w-12 h-0.5 bg-[#6b5b7a] mx-auto my-3" />
+          {products.length === 0 ? (
+            <p className="text-center text-[#666] py-8">ยังไม่มีรายการมาใหม่</p>
+          ) : (
+            <ul className="flex flex-wrap justify-center gap-6 mt-8">
+              {products.map((p) => (
+                <li
+                  key={p.id}
+                  className="w-full sm:w-[min(100%,280px)] lg:w-[min(100%,260px)]"
                 >
-                  {pageNum}
-                </button>
-              );
-            })}
-            <button
-              disabled={pagination.page === pagination.totalPages}
-              onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
-              className="rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 hover:bg-muted transition-colors"
-            >
-              ถัดไป
-            </button>
+                  <Link
+                    href={`/shop/${p.id}`}
+                    className="block bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow"
+                  >
+                    <div className="relative aspect-square bg-gray-100">
+                      <Image
+                        src={p.image || PLACEHOLDER_IMAGE}
+                        alt={p.name}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        unoptimized
+                      />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-[#2d1b4e]">{p.name}</h3>
+                      {p.subtitle && (
+                        <p className="text-sm text-[#666] mt-1 line-clamp-2">
+                          {p.subtitle}
+                        </p>
+                      )}
+                      <p className="mt-2 font-bold text-[#6b5b7a]">
+                        ฿{Number(p.price).toLocaleString("th-TH")}
+                      </p>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
           </div>
-        )}
-          </FadeUp>
-        </main>
-      </SidebarInset>
-    </div>
+        </section>
+      </FadeUpWhenVisible>
+
+      {/* Contact section */}
+      <FadeUpWhenVisible>
+        <section className="bg-[#F5F3F7] py-12 md:py-16 px-6 md:px-12">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-[#2d1b4e] text-center">
+            ติดต่อ
+          </h2>
+          <div className="w-12 h-0.5 bg-[#6b5b7a] mx-auto my-3" />
+          <ContactForm />
+        </div>
+        </section>
+      </FadeUpWhenVisible>
+    </>
   );
 }
