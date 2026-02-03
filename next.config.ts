@@ -10,11 +10,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  experimental: {
-    turbo: {
-      // Turbopack configuration options
-    },
-  },
 };
 
 export default nextConfig;
