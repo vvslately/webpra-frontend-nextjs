@@ -50,6 +50,10 @@ export function Globe({
     const w = Math.max(width, 100);
     const h = w;
 
+    const markers = Array.isArray(config.markers)
+      ? config.markers.map((m) => ({ location: m.location, size: m.size ?? 1 }))
+      : [];
+
     const globe = createGlobe(canvas, {
       devicePixelRatio: 2,
       width: w * 2,
@@ -63,11 +67,9 @@ export function Globe({
       baseColor: [0.3, 0.3, 0.3],
       markerColor: [0.1, 0.8, 1],
       glowColor: [1, 1, 1],
-      markers: [],
       scale: 1,
       ...config,
-      // Ensure markers is always an array (cobe calls .map on it)
-      markers: Array.isArray(config.markers) ? config.markers : [],
+      markers,
       onRender: (state) => {
         state.phi = phi;
         phi += 0.01;

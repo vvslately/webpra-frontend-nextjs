@@ -1,9 +1,10 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function OrderSuccessPage() {
+function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId");
 
@@ -51,5 +52,21 @@ export default function OrderSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function OrderSuccessFallback() {
+  return (
+    <div className="min-h-screen bg-[#E6E0EB] flex items-center justify-center px-6 py-16">
+      <div className="text-center text-[#666]">กำลังโหลด...</div>
+    </div>
+  );
+}
+
+export default function OrderSuccessPage() {
+  return (
+    <Suspense fallback={<OrderSuccessFallback />}>
+      <OrderSuccessContent />
+    </Suspense>
   );
 }
