@@ -42,8 +42,8 @@ function saveCart(items: CartItem[]) {
 type CartContextValue = {
   items: CartItem[];
   addItem: (item: Omit<CartItem, "qty"> & { qty?: number }) => void;
-  removeItem: (productId: number) => void;
-  updateQty: (productId: number, qty: number) => void;
+  removeItem: (productId: number, selectedOptions?: Record<string, string>) => void;
+  updateQty: (productId: number, qty: number, selectedOptions?: Record<string, string>) => void;
   clearCart: () => void;
   totalAmount: number;
   totalItems: number;

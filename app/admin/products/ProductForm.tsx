@@ -30,6 +30,12 @@ type Option = {
   values: OptionValue[];
 };
 
+type CombinationItem = {
+  combination: Record<string, string[]>;
+  price_adjustment?: number;
+  display_order?: number;
+};
+
 type Props = {
   product?: ProductFormData & { id: number };
   mode: "new" | "edit";
@@ -43,7 +49,7 @@ export default function ProductForm({ product, mode }: Props) {
   const [price, setPrice] = useState(product?.price ?? "");
   const [delivery_method, setDeliveryMethod] = useState(product?.delivery_method ?? "");
   const [options, setOptions] = useState<Option[]>([]);
-  const [combinations, setCombinations] = useState<Array<{ combination: Record<string, string[]>; price_adjustment: number }>>([]);
+  const [combinations, setCombinations] = useState<CombinationItem[]>([]);
   const [optionsLoading, setOptionsLoading] = useState(false);
   const [combinationsLoading, setCombinationsLoading] = useState(false);
   const [error, setError] = useState("");

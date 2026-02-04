@@ -65,14 +65,15 @@ export default function ProductCombinationsEditor({
     const updated = isSelected
       ? current.filter((v) => v !== value)
       : [...current, value];
-    const newCombination = {
+    const raw: Record<string, string[] | undefined> = {
       ...combo.combination,
       [optionName]: updated.length > 0 ? updated : undefined,
     };
-    // Remove empty arrays
-    Object.keys(newCombination).forEach((key) => {
-      if (Array.isArray(newCombination[key]) && newCombination[key].length === 0) {
-        delete newCombination[key];
+    const newCombination: Record<string, string[]> = {};
+    Object.keys(raw).forEach((key) => {
+      const arr = raw[key];
+      if (Array.isArray(arr) && arr.length > 0) {
+        newCombination[key] = arr;
       }
     });
     updateCombination(comboIdx, { combination: newCombination });

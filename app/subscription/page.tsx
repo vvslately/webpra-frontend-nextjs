@@ -88,7 +88,7 @@ export default function SubscriptionPage() {
       
       if (subscriptionResponse.status === "success" && subscriptionResponse.data) {
         setCurrentSubscription(subscriptionResponse.data.subscription);
-        setUserRole(subscriptionResponse.data.role);
+        setUserRole(subscriptionResponse.data.role ?? "member");
       }
       
       if (balanceResponse.status === "success" && balanceResponse.data) {

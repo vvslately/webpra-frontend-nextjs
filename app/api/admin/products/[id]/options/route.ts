@@ -108,11 +108,12 @@ export async function PUT(
     }
 
     await withTransaction(async (conn) => {
-      const [existingOptions] = await conn.execute<Array<{ id: number }>>(
+      const [rawOptions] = await conn.execute(
         "SELECT id FROM product_options WHERE product_id = ?",
         [productId]
       );
-      const existingOptionIds = (existingOptions || []).map((o) => o.id);
+      const existingOptions = (Array.isArray(rawOptions) ? rawOptions : []) as Array<{ id: number }>;
+      const existingOptionIds = existingOptions.map((o) => o.id);
 
       if (existingOptionIds.length > 0) {
         const placeholders = existingOptionIds.map(() => "?").join(",");

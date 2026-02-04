@@ -104,11 +104,7 @@ export default function ProductDetailClient({
       Object.values(selectedOptions).some((val) => val && val.length > 0)
       ? selectedOptions
       : undefined;
-    // Convert to array format for cart compatibility
-    const optsForCart = opts ? Object.fromEntries(
-      Object.entries(opts).map(([key, value]) => [key, [value]])
-    ) : undefined;
-    addItem({ productId, name: productName, price: calculatedPrice, image, qty, selectedOptions: optsForCart });
+    addItem({ productId, name: productName, price: calculatedPrice, image, qty, selectedOptions: opts });
     router.push("/cart");
   }
 

@@ -116,7 +116,7 @@ export default function TopupPage() {
       if (response.status === "success" && response.data) {
         showAlert({
           title: "สำเร็จ",
-          description: `เติมเงินสำเร็จ ${response.data.amount_added.toLocaleString("th-TH")} บาท`,
+          description: `เติมเงินสำเร็จ ${(response.data.amount_added ?? 0).toLocaleString("th-TH")} บาท`,
         });
         setQrCode(null);
         setAmount("");
