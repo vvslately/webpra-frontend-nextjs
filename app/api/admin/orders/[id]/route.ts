@@ -72,12 +72,39 @@ export async function GET(
         product_image: string | null;
         price: string;
         qty: number;
+        selected_options: string | null;
       }[]
     >(
-      "SELECT id, product_id, product_name, product_image, price, qty FROM order_items WHERE order_id = ? ORDER BY id",
+      "SELECT id, product_id, product_name, product_image, price, qty, selected_options FROM order_items WHERE order_id = ? ORDER BY id",
       [orderId]
     );
-    const items = Array.isArray(itemRows) ? itemRows : [];
+    const items = Array.isArray(itemRows)
+      ? itemRows.map((item) => {
+          let selectedOptions = null;
+          if (item.selected_options) {
+            try {
+              // MySQL JSON type อาจ return เป็น object หรือ string
+              if (typeof item.selected_options === 'string') {
+                selectedOptions = JSON.parse(item.selected_options);
+              } else if (typeof item.selected_options === 'object') {
+                selectedOptions = item.selected_options;
+              }
+            } catch (e) {
+              console.error("Error parsing selected_options:", e, item.selected_options);
+              selectedOptions = null;
+            }
+          }
+          return {
+            id: item.id,
+            product_id: item.product_id,
+            product_name: item.product_name,
+            product_image: item.product_image,
+            price: item.price,
+            qty: item.qty,
+            selected_options: selectedOptions,
+          };
+        })
+      : [];
     return NextResponse.json({ order, items });
   } catch (e) {
     console.error("Admin get order error:", e);

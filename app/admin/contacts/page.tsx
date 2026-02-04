@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Swal from "sweetalert2";
 
 type Contact = {
   id: number;
@@ -29,12 +30,36 @@ export default function AdminContactsPage() {
   }, []);
 
   async function handleDelete(id: number, name: string) {
-    if (!confirm(`ลบข้อความจาก "${name}" ใช่หรือไม่?`)) return;
+    const result = await Swal.fire({
+      icon: "warning",
+      title: "ยืนยันการลบ",
+      text: `ลบข้อความจาก "${name}" ใช่หรือไม่?`,
+      showCancelButton: true,
+      confirmButtonText: "ลบ",
+      cancelButtonText: "ยกเลิก",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b5b7a",
+    });
+    if (!result.isConfirmed) return;
     const res = await fetch(`/api/admin/contacts/${id}`, { method: "DELETE" });
-    if (res.ok) setContacts((prev) => prev.filter((c) => c.id !== id));
-    else {
+    if (res.ok) {
+      setContacts((prev) => prev.filter((c) => c.id !== id));
+      await Swal.fire({
+        icon: "success",
+        title: "สำเร็จ",
+        text: "ลบข้อความสำเร็จ",
+        confirmButtonColor: "#6b5b7a",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } else {
       const data = await res.json();
-      alert(data.error || "ลบไม่สำเร็จ");
+      await Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาด",
+        text: data.error || "ลบไม่สำเร็จ",
+        confirmButtonColor: "#6b5b7a",
+      });
     }
   }
 

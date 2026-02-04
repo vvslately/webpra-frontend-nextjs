@@ -10,6 +10,7 @@ type BodyItem = {
   image: string | null;
   price: number;
   qty: number;
+  selectedOptions?: Record<string, string> | null;
 };
 
 type Body = {
@@ -86,8 +87,11 @@ export async function POST(request: Request) {
       const id = insertOrder?.insertId;
       if (!id) throw new Error("สร้างคำสั่งซื้อไม่สำเร็จ");
       for (const item of items) {
+        const selectedOptionsJson = item.selectedOptions && Object.keys(item.selectedOptions).length > 0
+          ? JSON.stringify(item.selectedOptions)
+          : null;
         await conn.execute(
-          "INSERT INTO order_items (order_id, product_id, product_name, product_image, price, qty) VALUES (?, ?, ?, ?, ?, ?)",
+          "INSERT INTO order_items (order_id, product_id, product_name, product_image, price, qty, selected_options) VALUES (?, ?, ?, ?, ?, ?, ?)",
           [
             id,
             item.productId,
@@ -95,6 +99,7 @@ export async function POST(request: Request) {
             item.image ?? null,
             item.price,
             Math.max(1, item.qty),
+            selectedOptionsJson,
           ]
         );
       }

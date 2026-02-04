@@ -88,10 +88,7 @@ export default async function ProductDetailPage({
               </p>
             )}
             <div className="w-12 h-0.5 bg-[#6b5b7a]/60 my-4" />
-            {/* Price */}
-            <p className="text-2xl md:text-3xl font-bold text-[#2d1b4e]">
-              ฿{priceNum.toLocaleString("th-TH")}
-            </p>
+            {/* Price - จะแสดงราคาที่คำนวณจาก ProductDetailClient */}
 
             <ProductDetailClient
               productId={product.id}

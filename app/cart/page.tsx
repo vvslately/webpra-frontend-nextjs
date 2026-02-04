@@ -66,44 +66,55 @@ export default function CartPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((item) => (
-                    <tr
-                      key={item.productId}
-                      className="border-b border-gray-100 last:border-0"
-                    >
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-4">
-                          <div className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-[#f5f3f7] group">
-                            <Image
-                              src={item.image || PLACEHOLDER_IMAGE}
-                              alt={item.name}
-                              fill
-                              className="object-cover"
-                              sizes="80px"
-                              unoptimized
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeItem(item.productId)}
-                              className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-black/80 transition-opacity"
-                              aria-label="ลบออกจากตะกร้า"
-                            >
-                              <XIcon className="w-3.5 h-3.5" />
-                            </button>
+                  {items.map((item, idx) => {
+                    const itemKey = `${item.productId}-${JSON.stringify(item.selectedOptions || {})}`;
+                    return (
+                      <tr
+                        key={itemKey}
+                        className="border-b border-gray-100 last:border-0"
+                      >
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-4">
+                            <div className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-[#f5f3f7] group">
+                              <Image
+                                src={item.image || PLACEHOLDER_IMAGE}
+                                alt={item.name}
+                                fill
+                                className="object-cover"
+                                sizes="80px"
+                                unoptimized
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeItem(item.productId, item.selectedOptions)}
+                                className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-black/80 transition-opacity"
+                                aria-label="ลบออกจากตะกร้า"
+                              >
+                                <XIcon className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                            <div>
+                              <Link
+                                href={`/shop/${item.productId}`}
+                                className="font-medium text-[#2d1b4e] hover:text-[#6b5b7a] hover:underline"
+                              >
+                                {item.name}
+                              </Link>
+                              {item.selectedOptions && Object.keys(item.selectedOptions).length > 0 && (
+                                <div className="text-xs text-[#666] mt-1 space-y-0.5">
+                                  {Object.entries(item.selectedOptions).map(([key, value]) => (
+                                    <div key={key}>
+                                      <span className="font-medium">{key}:</span> {value}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              <p className="text-xs text-[#666] mt-0.5">
+                                #{item.productId}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <Link
-                              href={`/shop/${item.productId}`}
-                              className="font-medium text-[#2d1b4e] hover:text-[#6b5b7a] hover:underline"
-                            >
-                              {item.name}
-                            </Link>
-                            <p className="text-xs text-[#666] mt-0.5">
-                              #{item.productId}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
+                        </td>
                       <td className="py-4 px-4 text-center text-[#2d1b4e] font-medium">
                         ฿{item.price.toLocaleString("th-TH")}
                       </td>
@@ -111,9 +122,7 @@ export default function CartPage() {
                         <div className="flex items-center justify-center gap-0 rounded-lg overflow-hidden border border-[#6b5b7a]/30 bg-white w-fit mx-auto">
                           <button
                             type="button"
-                            onClick={() =>
-                              updateQty(item.productId, Math.max(0, item.qty - 1))
-                            }
+                            onClick={() => updateQty(item.productId, item.qty - 1, item.selectedOptions)}
                             className="w-9 h-9 flex items-center justify-center text-[#6b5b7a] hover:bg-[#6b5b7a]/10 transition-colors"
                             aria-label="ลดจำนวน"
                           >
@@ -124,7 +133,7 @@ export default function CartPage() {
                           </span>
                           <button
                             type="button"
-                            onClick={() => updateQty(item.productId, item.qty + 1)}
+                            onClick={() => updateQty(item.productId, item.qty + 1, item.selectedOptions)}
                             className="w-9 h-9 flex items-center justify-center text-[#6b5b7a] hover:bg-[#6b5b7a]/10 transition-colors"
                             aria-label="เพิ่มจำนวน"
                           >
@@ -136,7 +145,8 @@ export default function CartPage() {
                         ฿{(item.price * item.qty).toLocaleString("th-TH")}
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

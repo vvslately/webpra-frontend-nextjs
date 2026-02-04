@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Swal from "sweetalert2";
 
 type Order = {
   id: number;
@@ -48,20 +49,56 @@ export default function AdminOrdersPage() {
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, status } : o))
       );
+      await Swal.fire({
+        icon: "success",
+        title: "สำเร็จ",
+        text: "อัปเดตสถานะสำเร็จ",
+        confirmButtonColor: "#6b5b7a",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     } else {
       const data = await res.json();
-      alert(data.error || "อัปเดตไม่สำเร็จ");
+      await Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาด",
+        text: data.error || "อัปเดตไม่สำเร็จ",
+        confirmButtonColor: "#6b5b7a",
+      });
     }
   }
 
   async function deleteOrder(orderId: number) {
-    if (!confirm("ต้องการลบคำสั่งซื้อ #" + orderId + " ใช่หรือไม่? ลูกค้าที่ผูกบัญชีจะได้รับเงินคืน")) return;
+    const result = await Swal.fire({
+      icon: "warning",
+      title: "ยืนยันการลบ",
+      text: `ต้องการลบคำสั่งซื้อ #${orderId} ใช่หรือไม่? ลูกค้าที่ผูกบัญชีจะได้รับเงินคืน`,
+      showCancelButton: true,
+      confirmButtonText: "ลบ",
+      cancelButtonText: "ยกเลิก",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b5b7a",
+    });
+    if (!result.isConfirmed) return;
     const res = await fetch(`/api/admin/orders/${orderId}`, { method: "DELETE" });
     if (res.ok) {
       setOrders((prev) => prev.filter((o) => o.id !== orderId));
+      await Swal.fire({
+        icon: "success",
+        title: "สำเร็จ",
+        text: "ลบคำสั่งซื้อสำเร็จ",
+        confirmButtonColor: "#6b5b7a",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     } else {
       const data = await res.json();
-      alert(data.error || "ลบไม่สำเร็จ");
+      await Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาด",
+        text: data.error || "ลบไม่สำเร็จ",
+        confirmButtonColor: "#6b5b7a",
+      });
     }
   }
 

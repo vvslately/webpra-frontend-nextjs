@@ -17,6 +17,7 @@ export type CartItem = {
   image: string | null;
   price: number;
   qty: number;
+  selectedOptions?: Record<string, string>; // { "สี": "แดง", "ขนาด": "S" }
 };
 
 function loadCart(): CartItem[] {
@@ -67,7 +68,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     (item: Omit<CartItem, "qty"> & { qty?: number }) => {
       const qty = Math.max(1, item.qty ?? 1);
       setItems((prev) => {
-        const i = prev.findIndex((x) => x.productId === item.productId);
+        const itemKey = JSON.stringify({
+          productId: item.productId,
+          selectedOptions: item.selectedOptions || {},
+        });
+        const i = prev.findIndex(
+          (x) =>
+            x.productId === item.productId &&
+            JSON.stringify(x.selectedOptions || {}) === JSON.stringify(item.selectedOptions || {})
+        );
         if (i >= 0) {
           const next = [...prev];
           next[i] = { ...next[i], qty: next[i].qty + qty };
@@ -79,20 +88,36 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
-  const removeItem = useCallback((productId: number) => {
-    setItems((prev) => prev.filter((x) => x.productId !== productId));
-  }, []);
-
-  const updateQty = useCallback((productId: number, qty: number) => {
-    const n = Math.max(0, qty);
+  const removeItem = useCallback((productId: number, selectedOptions?: Record<string, string>) => {
     setItems((prev) =>
-      n === 0
-        ? prev.filter((x) => x.productId !== productId)
-        : prev.map((x) =>
-            x.productId === productId ? { ...x, qty: n } : x
-          )
+      prev.filter(
+        (x) =>
+          x.productId !== productId ||
+          JSON.stringify(x.selectedOptions || {}) !== JSON.stringify(selectedOptions || {})
+      )
     );
   }, []);
+
+  const updateQty = useCallback(
+    (productId: number, qty: number, selectedOptions?: Record<string, string>) => {
+      const n = Math.max(0, qty);
+      setItems((prev) =>
+        n === 0
+          ? prev.filter(
+              (x) =>
+                x.productId !== productId ||
+                JSON.stringify(x.selectedOptions || {}) !== JSON.stringify(selectedOptions || {})
+            )
+          : prev.map((x) =>
+              x.productId === productId &&
+              JSON.stringify(x.selectedOptions || {}) === JSON.stringify(selectedOptions || {})
+                ? { ...x, qty: n }
+                : x
+            )
+      );
+    },
+    []
+  );
 
   const clearCart = useCallback(() => {
     setItems([]);

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 type Order = {
   id: number;
@@ -21,6 +22,7 @@ type OrderItem = {
   product_image: string | null;
   price: string;
   qty: number;
+  selected_options: Record<string, string[]> | null;
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -60,22 +62,55 @@ export default function AdminOrderDetailPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
-    if (res.ok) setOrder((prev) => (prev ? { ...prev, status } : null));
-    else {
+    if (res.ok) {
+      setOrder((prev) => (prev ? { ...prev, status } : null));
+      await Swal.fire({
+        icon: "success",
+        title: "สำเร็จ",
+        text: "อัปเดตสถานะสำเร็จ",
+        confirmButtonColor: "#6b5b7a",
+      });
+    } else {
       const data = await res.json();
-      alert(data.error || "อัปเดตไม่สำเร็จ");
+      await Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาด",
+        text: data.error || "อัปเดตไม่สำเร็จ",
+        confirmButtonColor: "#6b5b7a",
+      });
     }
   }
 
   async function deleteOrder() {
     if (!order) return;
-    if (!confirm("ต้องการลบคำสั่งซื้อ #" + order.id + " ใช่หรือไม่? ลูกค้าที่ผูกบัญชีจะได้รับเงินคืน")) return;
+    const result = await Swal.fire({
+      icon: "warning",
+      title: "ยืนยันการลบ",
+      text: `ต้องการลบคำสั่งซื้อ #${order.id} ใช่หรือไม่? ลูกค้าที่ผูกบัญชีจะได้รับเงินคืน`,
+      showCancelButton: true,
+      confirmButtonText: "ลบ",
+      cancelButtonText: "ยกเลิก",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b5b7a",
+    });
+    if (!result.isConfirmed) return;
     const res = await fetch(`/api/admin/orders/${order.id}`, { method: "DELETE" });
     if (res.ok) {
+      await Swal.fire({
+        icon: "success",
+        title: "สำเร็จ",
+        text: "ลบคำสั่งซื้อสำเร็จ",
+        confirmButtonColor: "#6b5b7a",
+      });
       router.push("/admin/orders");
     } else {
       const data = await res.json();
-      alert(data.error || "ลบไม่สำเร็จ");
+      await Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาด",
+        text: data.error || "ลบไม่สำเร็จ",
+        confirmButtonColor: "#6b5b7a",
+      });
     }
   }
 
@@ -144,14 +179,30 @@ export default function AdminOrderDetailPage() {
             {items.map((item) => (
               <li
                 key={item.id}
-                className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0"
+                className="py-2 border-b border-gray-100 last:border-0"
               >
-                <span className="text-[#333]">
-                  {item.product_name} x {item.qty}
-                </span>
-                <span className="font-medium text-[#6b5b7a]">
-                  ฿{(Number(item.price) * item.qty).toLocaleString("th-TH")}
-                </span>
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <span className="text-[#333] font-medium">
+                      {item.product_name} x {item.qty}
+                    </span>
+                    {item.selected_options && Object.keys(item.selected_options).length > 0 && (
+                      <div className="mt-1 text-sm text-[#666]">
+                        {Object.entries(item.selected_options).map(([key, values], idx) => {
+                          const valuesArray = Array.isArray(values) ? values : [values];
+                          return valuesArray.length > 0 ? (
+                            <div key={idx} className={idx > 0 ? "mt-1" : ""}>
+                              <span className="font-medium">{key}:</span> {valuesArray.join(", ")}
+                            </div>
+                          ) : null;
+                        })}
+                      </div>
+                    )}
+                  </div>
+                  <span className="font-medium text-[#6b5b7a] ml-4">
+                    ฿{(Number(item.price) * item.qty).toLocaleString("th-TH")}
+                  </span>
+                </div>
               </li>
             ))}
           </ul>

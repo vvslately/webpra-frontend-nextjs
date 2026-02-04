@@ -56,6 +56,7 @@ export default function CheckoutPage() {
             image: x.image,
             price: x.price,
             qty: x.qty,
+            selectedOptions: x.selectedOptions || null,
           })),
         }),
       });

@@ -80,6 +80,7 @@ CREATE TABLE `order_items` (
   `product_image` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `price` decimal(10,2) NOT NULL,
   `qty` int NOT NULL DEFAULT 1,
+  `selected_options` json DEFAULT NULL COMMENT 'JSON เก็บ options ที่เลือก เช่น {"สี": "แดง", "ขนาด": "L"}',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_order_id` (`order_id`),
@@ -87,6 +88,9 @@ CREATE TABLE `order_items` (
   CONSTRAINT `order_items_order_id_fk` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `order_items_product_id_fk` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ALTER TABLE สำหรับเพิ่ม selected_options ถ้ามี table อยู่แล้ว
+-- ALTER TABLE `order_items` ADD COLUMN `selected_options` json DEFAULT NULL COMMENT 'JSON เก็บ options ที่เลือก เช่น {"สี": "แดง", "ขนาด": "L"}' AFTER `qty`;
 
 DROP TABLE IF EXISTS `contacts`;
 CREATE TABLE `contacts` (
@@ -99,6 +103,76 @@ CREATE TABLE `contacts` (
   PRIMARY KEY (`id`),
   KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `product_option_values`;
+DROP TABLE IF EXISTS `product_options`;
+CREATE TABLE `product_options` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `product_id` int NOT NULL,
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ชื่อ option เช่น สี, ขนาด',
+  `display_order` int NOT NULL DEFAULT 0 COMMENT 'ลำดับการแสดง',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_product_id` (`product_id`),
+  CONSTRAINT `product_options_product_id_fk` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `product_option_values` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `option_id` int NOT NULL,
+  `value` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ค่าของ option เช่น แดง, S',
+  `description` text COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'คำบรรยายค่าของ option',
+  `price_adjustment` decimal(10,2) DEFAULT 0.00 COMMENT 'การปรับราคา (บวก/ลบ)',
+  `image_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'URL รูปภาพของ option นี้',
+  `display_order` int NOT NULL DEFAULT 0 COMMENT 'ลำดับการแสดง',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_option_id` (`option_id`),
+  CONSTRAINT `product_option_values_option_id_fk` FOREIGN KEY (`option_id`) REFERENCES `product_options` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ALTER TABLE สำหรับเพิ่ม description และ price_adjustment ถ้ามี table อยู่แล้ว
+-- ALTER TABLE `product_option_values` ADD COLUMN `description` text COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'คำบรรยายค่าของ option' AFTER `value`;
+-- ALTER TABLE `product_option_values` ADD COLUMN `price_adjustment` decimal(10,2) DEFAULT 0.00 COMMENT 'การปรับราคา (บวก/ลบ)' AFTER `description`;
+
+DROP TABLE IF EXISTS `product_option_combinations`;
+CREATE TABLE `product_option_combinations` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `product_id` int NOT NULL,
+  `combination` json NOT NULL COMMENT 'JSON เก็บ combination เช่น {"สี": "แดง", "ขนาด": "L"}',
+  `price_adjustment` decimal(10,2) DEFAULT 0.00 COMMENT 'การปรับราคา (บวก/ลบ)',
+  `display_order` int NOT NULL DEFAULT 0 COMMENT 'ลำดับการแสดง',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_product_id` (`product_id`),
+  CONSTRAINT `product_option_combinations_product_id_fk` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ALTER TABLE สำหรับเพิ่ม product_option_combinations ถ้ามี table อยู่แล้ว
+-- CREATE TABLE `product_option_combinations` (
+--   `id` int NOT NULL AUTO_INCREMENT,
+--   `product_id` int NOT NULL,
+--   `combination` json NOT NULL COMMENT 'JSON เก็บ combination เช่น {"สี": "แดง", "ขนาด": "L"}',
+--   `price_adjustment` decimal(10,2) DEFAULT 0.00 COMMENT 'การปรับราคา (บวก/ลบ)',
+--   `display_order` int NOT NULL DEFAULT 0 COMMENT 'ลำดับการแสดง',
+--   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+--   PRIMARY KEY (`id`),
+--   KEY `idx_product_id` (`product_id`),
+--   CONSTRAINT `product_option_combinations_product_id_fk` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `about`;
+CREATE TABLE `about` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `image_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'URL รูปภาพ',
+  `content` text COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'ข้อความเกี่ยวกับเรา',
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ข้อมูลเริ่มต้นสำหรับหน้าเกี่ยวกับเรา
+INSERT INTO `about` (`image_url`, `content`) VALUES
+('https://files.cdn-files-a.com/admin/system_photos_stock/2000_695b11503992e.jpg', 'ร้านของเราเป็นร้านจำหน่ายน้ำหอมออนไลน์ที่ก่อตั้งขึ้นด้วยความตั้งใจในการนำเสนอน้ำหอมคุณภาพดีในราคาที่เข้าถึงได้ เพื่อให้ลูกค้าทุกคนสามารถเลือกกลิ่นหอมที่เหมาะกับบุคลิกและโอกาสต่าง ๆ ในชีวิตประจำวันได้อย่างสะดวกสบายผ่านระบบออนไลน์\n\nเราคัดสรรน้ำหอมหลากหลายกลิ่น ทั้งโทนหวาน สดชื่น หรูหรา และสุภาพ เพื่อรองรับความต้องการของลูกค้าทุกเพศทุกวัย พร้อมให้ข้อมูลรายละเอียดของสินค้าอย่างชัดเจน เพื่อช่วยในการตัดสินใจเลือกซื้อ');
 
 -- ถ้ามีตาราง users อยู่แล้ว ให้รัน: ALTER TABLE users ADD COLUMN balance DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT 'เงินที่ user เก็บได้';
 --

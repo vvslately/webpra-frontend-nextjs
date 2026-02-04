@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import ProductOptionsEditor from "./ProductOptionsEditor";
+import ProductCombinationsEditor from "./ProductCombinationsEditor";
 
 type ProductFormData = {
   name: string;
@@ -10,6 +12,22 @@ type ProductFormData = {
   image: string;
   price: string;
   delivery_method: string;
+};
+
+type OptionValue = {
+  id?: number;
+  value: string;
+  description?: string | null;
+  price_adjustment?: number;
+  image_url?: string | null;
+  display_order?: number;
+};
+
+type Option = {
+  id?: number;
+  name: string;
+  display_order?: number;
+  values: OptionValue[];
 };
 
 type Props = {
@@ -24,11 +42,41 @@ export default function ProductForm({ product, mode }: Props) {
   const [image, setImage] = useState(product?.image ?? "");
   const [price, setPrice] = useState(product?.price ?? "");
   const [delivery_method, setDeliveryMethod] = useState(product?.delivery_method ?? "");
+  const [options, setOptions] = useState<Option[]>([]);
+  const [combinations, setCombinations] = useState<Array<{ combination: Record<string, string[]>; price_adjustment: number }>>([]);
+  const [optionsLoading, setOptionsLoading] = useState(false);
+  const [combinationsLoading, setCombinationsLoading] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+
+  useEffect(() => {
+    if (mode === "edit" && product?.id) {
+      setOptionsLoading(true);
+      fetch(`/api/admin/products/${product.id}/options`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.options) {
+            setOptions(data.options);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setOptionsLoading(false));
+
+      setCombinationsLoading(true);
+      fetch(`/api/admin/products/${product.id}/combinations`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.combinations) {
+            setCombinations(data.combinations);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setCombinationsLoading(false));
+    }
+  }, [mode, product?.id]);
 
   async function handleUploadImage() {
     if (!uploadFile) return;
@@ -84,6 +132,49 @@ export default function ProductForm({ product, mode }: Props) {
         setError(data.error || "เกิดข้อผิดพลาด");
         return;
       }
+
+      const productId = mode === "edit" ? product!.id : data.id;
+      if (productId) {
+        const validOptions = options
+          .filter((opt) => opt.name.trim())
+          .map((opt, idx) => ({
+            name: opt.name.trim(),
+            display_order: idx,
+            values: opt.values
+              .filter((v) => v.value.trim())
+              .map((v, vidx) => ({
+                value: v.value.trim(),
+                description: v.description || null,
+                price_adjustment: v.price_adjustment || 0,
+                image_url: v.image_url || null,
+                display_order: vidx,
+              })),
+          }));
+
+        if (validOptions.length > 0) {
+          await fetch(`/api/admin/products/${productId}/options`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ options: validOptions }),
+          });
+        }
+
+        // Save combinations
+        const validCombinations = combinations
+          .filter((c) => c.combination && Object.keys(c.combination).length > 0)
+          .map((c, idx) => ({
+            combination: c.combination,
+            price_adjustment: c.price_adjustment || 0,
+            display_order: idx,
+          }));
+
+        await fetch(`/api/admin/products/${productId}/combinations`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ combinations: validCombinations }),
+        });
+      }
+
       router.push("/admin/products");
       router.refresh();
     } catch {
@@ -94,7 +185,7 @@ export default function ProductForm({ product, mode }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-xl space-y-4">
+    <form onSubmit={handleSubmit} className="max-w-5xl space-y-4">
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-[#333] mb-1">
           ชื่อสินค้า <span className="text-red-500">*</span>
@@ -199,6 +290,29 @@ export default function ProductForm({ product, mode }: Props) {
           className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b5b7a] focus:border-transparent"
           placeholder="เช่น ส่งฟรี, ส่งด่วน"
         />
+      </div>
+      <div>
+        {optionsLoading ? (
+          <p className="text-sm text-[#666]">กำลังโหลด options...</p>
+        ) : (
+          <ProductOptionsEditor
+            productId={mode === "edit" ? product?.id ?? null : null}
+            options={options}
+            onChange={setOptions}
+          />
+        )}
+      </div>
+      <div>
+        {combinationsLoading ? (
+          <p className="text-sm text-[#666]">กำลังโหลด combinations...</p>
+        ) : (
+          <ProductCombinationsEditor
+            productId={mode === "edit" ? product?.id ?? null : null}
+            options={options}
+            combinations={combinations}
+            onChange={setCombinations}
+          />
+        )}
       </div>
       {error && (
         <p className="text-sm text-red-600" role="alert">
