@@ -6,6 +6,7 @@ import { ViewTransitionLink } from "@/components/ViewTransitionLink";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart-context";
+import { Wallet } from "lucide-react";
 
 type SessionUser = {
   id: number;
@@ -206,8 +207,16 @@ export function Navbar() {
                       <p className="text-sm font-medium text-[#2d1b4e]">
                         {user.username}
                       </p>
-                      <p className="text-xs text-[#666]">เก็บเงิน: ฿{Number(user.balance).toLocaleString("th-TH")}</p>
+                      <p className="text-xs text-[#666]">ยอดเงิน: ฿{Number(user.balance).toLocaleString("th-TH", { minimumFractionDigits: 2 })}</p>
                     </div>
+                    <Link
+                      href="/topup"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-left text-[#6b5b7a] hover:bg-gray-50 font-medium"
+                    >
+                      <Wallet className="h-4 w-4" />
+                      เติมเงิน
+                    </Link>
                     {user.role === "admin" && (
                       <Link
                         href="/admin"
@@ -267,13 +276,14 @@ export function Navbar() {
         {/* Mobile: Login/User + Cart + Hamburger */}
         <div className="flex md:hidden items-center gap-3">
           {user ? (
-            <span
-              className="flex items-center gap-1.5 text-white text-sm"
-              aria-label={`ผู้ใช้ ${user.username} เก็บเงิน ฿${user.balance}`}
+            <ViewTransitionLink
+              href="/topup"
+              className="flex items-center gap-1.5 text-white text-sm hover:opacity-90 transition-opacity"
+              aria-label={`ยอดเงิน ฿${user.balance} คลิกเพื่อเติมเงิน`}
             >
-              <UserIcon className="h-5 w-5" />
-              <span>฿{Number(user.balance).toLocaleString("th-TH")}</span>
-            </span>
+              <Wallet className="h-5 w-5" />
+              <span className="font-medium">฿{Number(user.balance).toLocaleString("th-TH", { minimumFractionDigits: 2 })}</span>
+            </ViewTransitionLink>
           ) : (
             <ViewTransitionLink
               href="/login"
@@ -332,6 +342,19 @@ export function Navbar() {
             })}
             {user ? (
               <>
+                <li>
+                  <ViewTransitionLink
+                    href="/topup"
+                    onClick={closeMenu}
+                    className="flex items-center gap-2 px-4 py-3 text-base font-medium text-white no-underline transition-colors duration-200 hover:bg-white/10"
+                  >
+                    <Wallet className="h-5 w-5" />
+                    <span>เติมเงิน</span>
+                    <span className="ml-auto text-sm opacity-80">
+                      ฿{Number(user.balance).toLocaleString("th-TH", { minimumFractionDigits: 2 })}
+                    </span>
+                  </ViewTransitionLink>
+                </li>
                 {user.role === "admin" && (
                   <li>
                     <ViewTransitionLink

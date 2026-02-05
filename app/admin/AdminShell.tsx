@@ -68,6 +68,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <Link href="/admin/about" className={navClass} onClick={closeSidebar}>
             จัดการข้อมูลเกี่ยวกับเรา
           </Link>
+          <Link href="/admin/slip-accounts" className={navClass} onClick={closeSidebar}>
+            จัดการบัญชีสลิป
+          </Link>
         </nav>
         <div className="mt-auto p-4 border-t border-white/10">
           <Link
