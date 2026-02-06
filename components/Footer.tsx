@@ -24,20 +24,39 @@ export function Footer() {
           </div>
 
           {/* ขวา - ลิงก์นำทาง */}
-          <nav
-            className="flex flex-wrap justify-start md:justify-end gap-x-6 gap-y-2"
-            aria-label="ลิงก์นำทางส่วนท้าย"
-          >
-            {footerLinks.map(({ href, label }) => (
+          <div className="flex flex-col gap-4">
+            <nav
+              className="flex flex-wrap justify-start md:justify-end gap-x-6 gap-y-2"
+              aria-label="ลิงก์นำทางส่วนท้าย"
+            >
+              {footerLinks.map(({ href, label }) => (
+                <ViewTransitionLink
+                  key={href}
+                  href={href}
+                  className="text-sm text-white/90 hover:text-white transition-colors duration-200"
+                >
+                  {label}
+                </ViewTransitionLink>
+              ))}
+            </nav>
+            <nav
+              className="flex flex-wrap justify-start md:justify-end gap-x-6 gap-y-2"
+              aria-label="เอกสาร"
+            >
               <ViewTransitionLink
-                key={href}
-                href={href}
-                className="text-sm text-white/90 hover:text-white transition-colors duration-200"
+                href="/code_common"
+                className="text-sm text-white/70 hover:text-white transition-colors duration-200"
               >
-                {label}
+                โค้ดที่ใช้บ่อย
               </ViewTransitionLink>
-            ))}
-          </nav>
+              <ViewTransitionLink
+                href="/command"
+                className="text-sm text-white/70 hover:text-white transition-colors duration-200"
+              >
+                คำสั่งทั้งหมด
+              </ViewTransitionLink>
+            </nav>
+          </div>
         </div>
       </div>
     </footer>

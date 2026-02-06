@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { CartProvider } from "@/lib/cart-context";
 import { Providers } from "@/components/providers";
+import { ConditionalNavbarFooter } from "@/components/ConditionalNavbarFooter";
 import { PageTransition } from "./components/PageTransition";
 import "./globals.css";
 
@@ -34,11 +33,11 @@ export default function RootLayout({
       <body className={`${lineSeedSansTH.variable} font-sans antialiased flex flex-col min-h-screen`}>
         <Providers>
           <CartProvider>
-            <Navbar />
-            <main className="flex-1">
-              <PageTransition>{children}</PageTransition>
-            </main>
-            <Footer />
+            <ConditionalNavbarFooter>
+              <main className="flex-1">
+                <PageTransition>{children}</PageTransition>
+              </main>
+            </ConditionalNavbarFooter>
           </CartProvider>
         </Providers>
       </body>
